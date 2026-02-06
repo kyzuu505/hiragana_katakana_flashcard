@@ -1,5 +1,4 @@
 # hiragana_katakana_flashcard
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -47,7 +46,6 @@
       background: #2980b9;
     }
 
-    /* Card Flip Container */
     .card-outer {
       perspective: 1000px;
       margin-bottom: 24px;
@@ -214,11 +212,7 @@
     }
 
     @media (max-width: 480px) {
-      .card {
-        height: auto;
-        min-height: 280px;
-        padding: 16px;
-      }
+      .card { height: auto; min-height: 280px; padding: 16px; }
       .character { font-size: clamp(4.5rem, 22vw, 6.5rem); }
       .romaji { font-size: clamp(2.2rem, 12vw, 3rem); }
       .buttons { gap: 12px; }
@@ -272,7 +266,7 @@
 </div>
 
 <script>
-// Data Kana (lengkapi sesuai kebutuhan, ini sudah termasuk contoh dakuten)
+// Data Kana
 const kanaData = [
   {hiragana: "あ", katakana: "ア", romaji: "a"},
   {hiragana: "い", katakana: "イ", romaji: "i"},
@@ -320,32 +314,13 @@ const kanaData = [
   {hiragana: "わ", katakana: "ワ", romaji: "wa"},
   {hiragana: "を", katakana: "ヲ", romaji: "wo"},
   {hiragana: "ん", katakana: "ン", romaji: "n"},
-  // Dakuten & handakuten contoh (bisa ditambah semua)
+  // Tambahkan dakuten/handakuten sesuai kebutuhan
   {hiragana: "が", katakana: "ガ", romaji: "ga"},
-  {hiragana: "ぎ", katakana: "ギ", romaji: "gi"},
-  {hiragana: "ぐ", katakana: "グ", romaji: "gu"},
-  {hiragana: "げ", katakana: "ゲ", romaji: "ge"},
-  {hiragana: "ご", katakana: "ゴ", romaji: "go"},
   {hiragana: "ざ", katakana: "ザ", romaji: "za"},
-  {hiragana: "じ", katakana: "ジ", romaji: "ji"},
-  {hiragana: "ず", katakana: "ズ", romaji: "zu"},
-  {hiragana: "ぜ", katakana: "ゼ", romaji: "ze"},
-  {hiragana: "ぞ", katakana: "ゾ", romaji: "zo"},
   {hiragana: "だ", katakana: "ダ", romaji: "da"},
-  {hiragana: "ぢ", katakana: "ヂ", romaji: "ji"},
-  {hiragana: "づ", katakana: "ヅ", romaji: "zu"},
-  {hiragana: "で", katakana: "デ", romaji: "de"},
-  {hiragana: "ど", katakana: "ド", romaji: "do"},
   {hiragana: "ば", katakana: "バ", romaji: "ba"},
-  {hiragana: "び", katakana: "ビ", romaji: "bi"},
-  {hiragana: "ぶ", katakana: "ブ", romaji: "bu"},
-  {hiragana: "べ", katakana: "ベ", romaji: "be"},
-  {hiragana: "ぼ", katakana: "ボ", romaji: "bo"},
   {hiragana: "ぱ", katakana: "パ", romaji: "pa"},
-  {hiragana: "ぴ", katakana: "ピ", romaji: "pi"},
-  {hiragana: "ぷ", katakana: "プ", romaji: "pu"},
-  {hiragana: "ぺ", katakana: "ペ", romaji: "pe"},
-  {hiragana: "ぽ", katakana: "ポ", romaji: "po"},
+  // ... sisanya bisa ditambah
 ];
 
 let currentIndex = 0;
@@ -354,14 +329,20 @@ let isFlipped = false;
 
 let score = { correct: 0, wrong: 0, seen: new Set() };
 
-// ─── Load & Save Progress ───
+// Load progress
 function loadProgress() {
   const saved = localStorage.getItem("kanaQuizProgress");
   if (saved) {
-    const data = JSON.parse(saved);
-    score.correct = data.correct || 0;
-    score.wrong   = data.wrong   || 0;
-    if (data.seen) score.seen = new Set(data.seen);
+    try {
+      const data = JSON.parse(saved);
+      score.correct = Number(data.correct) || 0;
+      score.wrong   = Number(data.wrong)   || 0;
+      if (Array.isArray(data.seen)) {
+        score.seen = new Set(data.seen.map(Number));
+      }
+    } catch (e) {
+      console.warn("Gagal load progress:", e);
+    }
   }
   updateScoreDisplay();
 }
@@ -379,11 +360,11 @@ function updateScoreDisplay() {
   const percent = total > 0 ? ((score.correct / total) * 100).toFixed(1) : 0;
   document.getElementById("score-area").innerHTML = `
     Skor: <b>\( {score.correct}</b> benar • <b> \){score.wrong}</b> salah<br>
-    Akurasi: <b>\( {percent}%</b> ( \){score.correct}/${total})
+    Akurasi: <b>\( {percent}%</b> ( \){score.correct} / ${total})
   `;
 }
 
-// ─── DOM Elements ───
+// DOM
 const card = document.getElementById("card");
 const mainChar = document.getElementById("main-char");
 const mainCharBack = document.getElementById("main-char-back");
@@ -394,13 +375,14 @@ const quizArea = document.getElementById("quiz-area");
 const quizOptions = document.getElementById("quiz-options");
 const modeTitle = document.getElementById("mode-title");
 
-// ─── Functions ───
+// Flip
 function flipCard(flip) {
   isFlipped = flip;
   card.classList.toggle("flipped", flip);
   card.style.cursor = (currentMode === "flash" || currentMode === "quiz") ? "pointer" : "default";
 }
 
+// Update kartu
 function updateCard() {
   const item = kanaData[currentIndex];
   const showHiragana = Math.random() > 0.5;
@@ -418,7 +400,7 @@ function updateCard() {
     info.textContent = "Hiragana & Katakana + Romaji";
     showAnswerBtn.classList.add("hidden");
     quizArea.classList.add("hidden");
-    flipCard(true); // langsung tampilkan jawaban
+    flipCard(true);
   }
   else if (currentMode === "flash") {
     if (isFlipped) {
@@ -434,13 +416,16 @@ function updateCard() {
     quizArea.classList.add("hidden");
   }
   else if (currentMode === "quiz") {
+    // Tambah ke seen HANYA jika belum ada
+    const wasNew = !score.seen.has(currentIndex);
+    score.seen.add(currentIndex);
+    if (wasNew) saveProgress(); // simpan hanya jika ada perubahan
+
     mainChar.textContent = showHiragana ? item.hiragana : item.katakana;
     info.textContent = "";
     showAnswerBtn.classList.add("hidden");
     quizArea.classList.remove("hidden");
     generateQuizOptions(item.romaji);
-    score.seen.add(currentIndex);
-    saveProgress();
   }
 }
 
@@ -480,7 +465,7 @@ function generateQuizOptions(correct) {
   });
 }
 
-// ─── Navigation ───
+// Navigasi
 function nextCard() {
   currentIndex = (currentIndex + 1) % kanaData.length;
   flipCard(false);
@@ -499,7 +484,7 @@ function randomCard() {
   updateCard();
 }
 
-// ─── Event Listeners ───
+// Event
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -521,7 +506,7 @@ document.getElementById("prev").onclick = prevCard;
 document.getElementById("random").onclick = randomCard;
 document.getElementById("show-answer").onclick = () => flipCard(true);
 
-// ─── Init ───
+// Init
 loadProgress();
 updateCard();
 </script>
